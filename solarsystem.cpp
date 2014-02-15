@@ -9,6 +9,7 @@
 
 //#include "solarsystem.h"
 #include "rungekutta.h"
+#include "predictorcorrector.h"
 #include "orbital.h"
 
 int main(int argc, char **argv) {
@@ -40,16 +41,26 @@ cout<<incEarth*M_PI/180<<endl;
 //initial test
 double dt = 3600;
 valarray<double> xold = initial;
-valarray<double> xnew(6);
+valarray<double> x1, x2, x3, xnew(6);
 valarray<double> accel(6);
 for (int i=0; i<10*365*24*3600/dt; i++) {
-//for(int i=0; i<3*3600/dt; i++) { //short test loop
-	//cout<<"okay "<<i<<endl;
-	xnew = RungeKutta(xold,i*dt,dt,gravitySun);
-    accel = gravitySun(xold, 0.);
-    cout<<"TEST: "<<i<<" "<<accel[0]<<" "<<accel[1]<<" "<<accel[2]<<" "<<accel[3]<<" "<<endl;
-	//cout<<xnew[5]-xold[5]<<endl;
-	earth.Iterate(xnew,(i+1)*dt);
+	if(i<3){
+        xnew = RungeKutta(xold,i*dt,dt,gravitySun);
+        switch (i) {
+            case 0:
+                x1 = xold;
+                x2 = xnew;
+                break;
+            case 1:
+                x3 = xnew;
+                break;
+            default:
+                break;
+        }
+    } else {
+        xnew = PredictorCorrector(xold, i*dt, x3, x2, x1, dt, gravitySun);
+    }
+    earth.Iterate(xnew,(i+1)*dt);
 	
 	xold = xnew;
 }
