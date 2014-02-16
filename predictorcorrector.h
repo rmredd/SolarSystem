@@ -19,7 +19,7 @@ valarray<double> AdamsBashforth(const valarray<double> xold, const double t, con
     const int size = xold.size();
     valarray<double> xnew(size);
     
-    xnew = xold + h*( 55./24.*f(xold,t) - 59./24.*f(xm1,t-h) + 37./24.*f(xm2,t-2*h) - 0.125*f(xm3,t-3*h) );
+    xnew = xold + h*( 55./24.*f(xold,t) - 59./24.*f(xm1,t-h) + 37./24.*f(xm2,t-2*h) - 0.375*f(xm3,t-3*h) );
     
     return(xnew);
 }
@@ -29,7 +29,7 @@ valarray<double> AdamsMoulton(const valarray<double> xold, const double t, const
     const int size = xold.size();
     valarray<double> xnew(size);
     
-    xnew = xold + h*( 0.125*f(xp1,t+h) + 19./24.*f(xold,t) - 5./24.*f(xm1,t-h) + 1./24.*f(xm2,t-2*h) );
+    xnew = xold + h*( 0.375*f(xp1,t+h) + 19./24.*f(xold,t) - 5./24.*f(xm1,t-h) + 1./24.*f(xm2,t-2*h) );
     
     return(xnew);
 }
@@ -46,13 +46,13 @@ valarray<double> PredictorCorrector(const valarray<double> xold, const double t,
     der_xm3 = f(xm3,t-3*h);
     
     //Adams-Bashford Prediction step
-    xp1 = xold + h*(55./24.*der_xold - 59./24*der_xm1 + 37./24.*der_xm2 - 0.125*der_xm3);
+    xp1 = xold + h*(55./24.*der_xold - 59./24.*der_xm1 + 37./24.*der_xm2 - 0.375*der_xm3);
     
     //Evaluation step
     der_xp1 = f(xp1,t+h);
     
     //Adams-Moulton Correction step
-    xnew = xold + h*( 0.125*der_xp1 + 19./24.*der_xold - 5./24.*der_xm1 + 1./24.*der_xm2);
+    xnew = xold + h*( 0.375*der_xp1 + 19./24.*der_xold - 5./24.*der_xm1 + 1./24.*der_xm2);
     
     return(xnew);
 }

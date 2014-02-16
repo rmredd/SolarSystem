@@ -43,7 +43,7 @@ double dt = 3600;
 valarray<double> xold = initial;
 valarray<double> x1, x2, x3, xnew(6);
 valarray<double> accel(6);
-for (int i=0; i<10*365*24*3600/dt; i++) {
+for (int i=0; i<20*365/dt*24*3600; i++) {
 	if(i<3){
         xnew = RungeKutta(xold,i*dt,dt,gravitySun);
         switch (i) {
@@ -61,8 +61,15 @@ for (int i=0; i<10*365*24*3600/dt; i++) {
         xnew = PredictorCorrector(xold, i*dt, x3, x2, x1, dt, gravitySun);
     }
     earth.Iterate(xnew,(i+1)*dt);
-	
-	xold = xnew;
+
+    if(i>=3){
+        x1 = x2;
+        x2 = x3;
+        x3 = xold;
+        xold = xnew;
+    } else {
+        xold = xnew;
+    }
 }
 cout<<"done iterating"<<endl;
 
