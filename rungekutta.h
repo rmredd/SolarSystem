@@ -8,8 +8,10 @@
  */
 
 #include <valarray>
+#include <vector>
 
 using std::valarray;
+using std::vector;
 
 //Runge Kutta integration step
 valarray<double> RungeKutta(const valarray<double> xold, const double t, const double h, valarray<double>(&f)(const valarray<double>, const double)) {

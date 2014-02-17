@@ -8,72 +8,51 @@
  */
 
 //#include "solarsystem.h"
-#include "rungekutta.h"
-#include "predictorcorrector.h"
+//#include "rungekutta.h"
+//#include "predictorcorrector.h"
 #include "orbital.h"
 
 int main(int argc, char **argv) {
 
-valarray<double> test = orbitalElementConverter(1.5e11,1.5e11,0,0,0,0);
-cout<<"Orbital elements test"<<endl;
-cout<<test[0]<<" "<<test[1]<<" "<<test[2]<<" "<<test[3]<<" "<<test[4]<<" "<<test[5]<<endl;
+    //valarray<double> test = orbitalElementConverter(1.5e11,1.5e11,0,0,0,0);
+    //cout<<"Orbital elements test"<<endl;
+    //cout<<test[0]<<" "<<test[1]<<" "<<test[2]<<" "<<test[3]<<" "<<test[4]<<" "<<test[5]<<endl;
 
+    //Initialize the solar system
+    //Note that this includes setting the timestep
+    SolarSystem system;
+    double dt = 3600.;
+    system.Initialize(dt, "");
+    
+    //Add the Sun as a planet
+    valarray<double> solar_position(6);
+    solar_position[0] = 0.; solar_position[1] = 0.; solar_position[2] = 0.;
+    solar_position[3] = 0.; solar_position[4] = -0.0894690; solar_position[5] = 0.;
+    system.AddPlanet(1.9891e30, 6.96e8, solar_position, 0., "TheSun");
+    
+    //Add the Earth as a planet
+    valarray<double> initial(6);
+    double eccEarth = 0.;//.01671;
+    double semimajorEarth = 1.49498e11; //m
+    double semiminorEarth = semimajorEarth*sqrt(1-eccEarth*eccEarth); //m
+    double incEarth = 0; //1.+34/60. ; //degrees
+    double ascNodeEarth = 0.; //348.74; //degrees
+    double argPeriEarth = 0.;// 114.21; //degrees
+    double startAngle = 0;
+    //initial conditions set to ascending node
+    initial = orbitalElementConverter(semimajorEarth,semiminorEarth,incEarth,ascNodeEarth,argPeriEarth,startAngle);
+    system.AddPlanet(5.972e24, 6.371e6, initial, 0., "TheEarth");
 
-//Initialize Earth
-Planet earth;
-valarray<double> initial(6);
-double eccEarth = .01671;
-double semimajorEarth = 1.49498e11; //m
-double semiminorEarth = semimajorEarth*sqrt(1-eccEarth*eccEarth); //m
-double incEarth = 1.+34/60. ; //degrees
-double ascNodeEarth = 348.74; //degrees
-double argPeriEarth = 114.21; //degrees
-double startAngle = 0;
-//initial conditions set to ascending node
-initial = orbitalElementConverter(semimajorEarth,semiminorEarth,incEarth,ascNodeEarth,argPeriEarth,startAngle);
-earth.Initialize(5.974e24,initial,0);
+    cout<<initial[0]<<" "<<initial[1]<<" "<<initial[2]<<" "<<initial[3]<<" "<<initial[4]<<" "<<initial[5]<<endl;
+    cout<<"Radius: "<<sqrt(initial[0]*initial[0]+initial[1]*initial[1])<<endl;
+    cout<<"Velocity: "<<sqrt(initial[3]*initial[3]+initial[4]*initial[4])<<endl;
+    cout<<incEarth*M_PI/180<<endl;
 
-cout<<initial[0]<<" "<<initial[1]<<" "<<initial[2]<<" "<<initial[3]<<" "<<initial[4]<<" "<<initial[5]<<endl;
-cout<<"Radius: "<<sqrt(initial[0]*initial[0]+initial[1]*initial[1])<<endl;
-cout<<"Velocity: "<<sqrt(initial[3]*initial[3]+initial[4]*initial[4])<<endl;
-cout<<incEarth*M_PI/180<<endl;
-
-//initial test
-double dt = 3600;
-valarray<double> xold = initial;
-valarray<double> x1, x2, x3, xnew(6);
-valarray<double> accel(6);
-for (int i=0; i<20*365/dt*24*3600; i++) {
-	if(i<3){
-        xnew = RungeKutta(xold,i*dt,dt,gravitySun);
-        switch (i) {
-            case 0:
-                x1 = xold;
-                x2 = xnew;
-                break;
-            case 1:
-                x3 = xnew;
-                break;
-            default:
-                break;
-        }
-    } else {
-        xnew = PredictorCorrector(xold, i*dt, x3, x2, x1, dt, gravitySun);
-    }
-    earth.Iterate(xnew,(i+1)*dt);
-
-    if(i>=3){
-        x1 = x2;
-        x2 = x3;
-        x3 = xold;
-        xold = xnew;
-    } else {
-        xold = xnew;
-    }
-}
-cout<<"done iterating"<<endl;
-
-earth.PrintOutput("test_output.dat");
+    //Run everything!
+    cout << "Ready to run!" << endl;
+    system.PrintPlanets();
+    RunTheSystem(system, 3*365.24*24.*3600.);
+    //RunTheSystem(system, 50*3600.);
 
 return(0);
 }
