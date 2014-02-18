@@ -29,33 +29,33 @@ using std::string;
 
 class Planet {
 public:
-	void Initialize(double, double, valarray<double>, double, string);
-	void Iterate(valarray<double>, double);
-	double CurrentTime(void) {return(planetTime);};
-    double Radius(void) {return(planetRadius);};
-    double Mass(void) {return(planetMass);};
-    valarray<double> CurrentPosition(void) {return(X);};
-    valarray<double> CurrentPosition(int); //Returns position at specified step
-    void SaveFuturePosition(valarray<double>); //Save a future position
-	valarray<double> Gravity(const valarray<double>, const double); //Gravity acting on another body
-    valarray<double> PositionDerivative(void); //Velocity derivative part
+	void Initialize(long double, long double, valarray<long double>, long double, string);
+	void Iterate(valarray<long double>, long double);
+	long double CurrentTime(void) {return(planetTime);};
+    long double Radius(void) {return(planetRadius);};
+    long double Mass(void) {return(planetMass);};
+    valarray<long double> CurrentPosition(void) {return(X);};
+    valarray<long double> CurrentPosition(int); //Returns position at specified step
+    void SaveFuturePosition(valarray<long double>); //Save a future position
+	valarray<long double> Gravity(const valarray<long double>, const long double); //Gravity acting on another body
+    valarray<long double> PositionDerivative(void); //Velocity derivative part
     
     string MyNameIs(void) {return(Name);} //returns planet's name as a string
 	
 private:
-	double planetMass;  //kg
-	double planetTime;  //current time in s
-    double planetRadius; //planet's radius in m
-	valarray<double> X;  //first 3 values x, y, z; next 3 values velocity, m/s
-    valarray<double> X1; //location at current timestep-1
-    valarray<double> X2; //location at current timestep-2
-    valarray<double> X3; //location at current timestep-3
-    valarray<double> Xfuture; //location at future timestep+1
+	long double planetMass;  //kg
+	long double planetTime;  //current time in s
+    long double planetRadius; //planet's radius in m
+	valarray<long double> X;  //first 3 values x, y, z; next 3 values velocity, m/s
+    valarray<long double> X1; //location at current timestep-1
+    valarray<long double> X2; //location at current timestep-2
+    valarray<long double> X3; //location at current timestep-3
+    valarray<long double> Xfuture; //location at future timestep+1
     string Name; //Name of the planet
 };
 
 //Initialize your planet!
-void Planet::Initialize(double mass, double radius, valarray<double> initialPosition, double initialTime, string myName) {
+void Planet::Initialize(long double mass, long double radius, valarray<long double> initialPosition, long double initialTime, string myName) {
 	planetMass = mass;
     planetRadius = radius;
 	X = initialPosition;
@@ -67,7 +67,7 @@ void Planet::Initialize(double mass, double radius, valarray<double> initialPosi
     Name = myName;
 }
 
-void Planet::Iterate(valarray<double> pos, double time) {
+void Planet::Iterate(valarray<long double> pos, long double time) {
     X3 = X2;
     X2 = X1;
     X1 = X;
@@ -76,13 +76,13 @@ void Planet::Iterate(valarray<double> pos, double time) {
 }
 
 //An extra future position that we can save
-void Planet::SaveFuturePosition(valarray<double> xpos){
+void Planet::SaveFuturePosition(valarray<long double> xpos){
     Xfuture = xpos;
 }
 
 //Returns planet's position.  0 = current step, 1 = one step previous, etc.
 //Defaults to current timestep
-valarray<double> Planet::CurrentPosition(int mystep){
+valarray<long double> Planet::CurrentPosition(int mystep){
     switch(mystep){
         case 0:
             return(X);
@@ -100,11 +100,11 @@ valarray<double> Planet::CurrentPosition(int mystep){
 }
 
 //Effect of a planet's gravity on another object at position x_else
-valarray<double> Planet::Gravity(const valarray<double> x_else, const double t) {
-	valarray<double> DX(6);
+valarray<long double> Planet::Gravity(const valarray<long double> x_else, const long double t) {
+	valarray<long double> DX(6);
 	
-	const double x = x_else[0]-X[0]; const double y = x_else[1]-X[1]; const double z = x_else[2]-X[2];
-	const double vx = x_else[3]; const double vy = x_else[4]; const double vz = x_else[5];
+	const long double x = x_else[0]-X[0]; const long double y = x_else[1]-X[1]; const long double z = x_else[2]-X[2];
+	const long double vx = x_else[3]; const long double vy = x_else[4]; const long double vz = x_else[5];
 	
 	//position derivative is velocity, which is not given by this object
 	DX[0] = 0.; DX[1] = 0.; DX[2] = 0.;
@@ -117,8 +117,8 @@ valarray<double> Planet::Gravity(const valarray<double> x_else, const double t) 
 }
 
 //Derivative -- note that this is constant velocities in the absence of other objects
-valarray<double> Planet::PositionDerivative(){
-    valarray<double> DX(6);
+valarray<long double> Planet::PositionDerivative(){
+    valarray<long double> DX(6);
     DX[0] = X[3]; DX[1] = X[4]; DX[2] = X[5];
     DX[3] = 0.; DX[4] = 0.; DX[5] = 0.;
     return(DX);
@@ -127,26 +127,26 @@ valarray<double> Planet::PositionDerivative(){
 //Main class for operating on everything
 class SolarSystem {
 public:
-    void Initialize(double, string); //Initialize -- all this does is set the timestep size and outputs
-    void AddPlanet(double, double, valarray<double>, double, string); //Routine for adding a planet -- repeat to fully initialize
+    void Initialize(long double, string); //Initialize -- all this does is set the timestep size and outputs
+    void AddPlanet(long double, long double, valarray<long double>, long double, string); //Routine for adding a planet -- repeat to fully initialize
     void PrintPlanets(void); //Append the position of the current timestep to files
     bool CheckForCollision(void); //Test to see if worlds collided
 
-    vector<valarray<double> > Gravity(int); //Calculates dervative at current time step
-    valarray<double> Gravity(const valarray<double>, const double); //Same, but works with Runge Kutta
+    vector<valarray<long double> > Gravity(int); //Calculates dervative at current time step
+    valarray<long double> Gravity(const valarray<long double>, const long double); //Same, but works with Runge Kutta
     
     //Some input-and-output array creation items necessary for iteration setup
     int NumberOfPlanets(void) {return(nPlanets);};
     int NumberOfSteps(void) {return(nSteps);};
-    double MyTimestep(void) {return(Timestep);};
-    valarray<double> CurrentPosition(int); //Returns current positions for one planet
-    vector<valarray<double> > CurrentPositionAllPlanets(int); //Returns indicated timestep position for all planets
-    void UpdateFuturePositions(vector<valarray<double> >); //Updates future positions for all planets
-    void Iterate(vector<valarray<double> >); //Iterates, taking in the new position as current
+    long double MyTimestep(void) {return(Timestep);};
+    valarray<long double> CurrentPosition(int); //Returns current positions for one planet
+    vector<valarray<long double> > CurrentPositionAllPlanets(int); //Returns indicated timestep position for all planets
+    void UpdateFuturePositions(vector<valarray<long double> >); //Updates future positions for all planets
+    void Iterate(vector<valarray<long double> >); //Iterates, taking in the new position as current
     
 private:
     vector<Planet> Planets;
-    double Timestep; //timestep
+    long double Timestep; //timestep
     string Output_dir; //output directory
     vector<string> OutputFiles; //Files to be used for output, one per planet
     int nPlanets; //a count of how many planets we've got
@@ -154,7 +154,7 @@ private:
 };
 
 //Basic initialization step
-void SolarSystem::Initialize(double dt, string outdir){
+void SolarSystem::Initialize(long double dt, string outdir){
     Timestep = dt;
     Output_dir = outdir;
     nPlanets = 0;
@@ -163,7 +163,7 @@ void SolarSystem::Initialize(double dt, string outdir){
 
 //Make a planet, initialize it, and add it to our list of planets
 //Note that the input is assumed to be an X, Y, Z, VX, VY, VZ vector
-void SolarSystem::AddPlanet(double mass, double radius, valarray<double> initialPosition, double initialTime, string myName){
+void SolarSystem::AddPlanet(long double mass, long double radius, valarray<long double> initialPosition, long double initialTime, string myName){
     
     Planet newPlanet;
     newPlanet.Initialize(mass,radius,initialPosition, initialTime, myName);
@@ -176,13 +176,14 @@ void SolarSystem::AddPlanet(double mass, double radius, valarray<double> initial
 //Which are determined by their names
 void SolarSystem::PrintPlanets(){
     ofstream fs;
-    valarray<double> position(6);
+    valarray<long double> position(6);
     for(int i=0; i<nPlanets; i++){
         if(nSteps>0) {
             fs.open(OutputFiles[i],ofstream::app);
         } else {
             fs.open(OutputFiles[i]);
         }
+        fs.precision(10);
         position = Planets[i].CurrentPosition(0);
         fs << position[0] << " " << position[1] << " " <<position[2] << " " << position[3] << " " << position[4] << " " << position[5] << endl;
         fs.close();
@@ -192,8 +193,8 @@ void SolarSystem::PrintPlanets(){
 //Function that tests for collisions between planets
 //Prints an alert if there is a collision and returns true; returns false otherwise
 bool SolarSystem::CheckForCollision(){
-    double separation;
-    valarray<double> p1(6), p2(6);
+    long double separation;
+    valarray<long double> p1(6), p2(6);
     for(int i=0; i<nPlanets; i++){
         p1 = Planets[i].CurrentPosition(0);
         for(int j=i+1; j<nPlanets; j++){
@@ -214,12 +215,12 @@ bool SolarSystem::CheckForCollision(){
 //Make the Gravity function, which returns the derivative we need at the current time step
 //Note this works at discrete steps, rather than doing the operation between, as per
 //the Runge Kutta integrator
-vector<valarray<double> > SolarSystem::Gravity(int mystep){
-    vector<valarray<double> > DX(nPlanets);
+vector<valarray<long double> > SolarSystem::Gravity(int mystep){
+    vector<valarray<long double> > DX(nPlanets);
 
     //Initialize our arrays
-    valarray<double> temp(6), temp2(6);
-    double x, y, z;
+    valarray<long double> temp(6), temp2(6);
+    long double x, y, z;
     for(int i=0; i<6; i++) temp[i] = 0;
     for(int i=0; i<nPlanets; i++) DX[i] = temp;
     
@@ -259,10 +260,11 @@ vector<valarray<double> > SolarSystem::Gravity(int mystep){
 //A version of the Gravity function that works with the general Runge Kutta integrator
 //Note that this still needs the class data for the masses, number of planets, and requires
 //Conversion of current position into a single valarray
-valarray<double> SolarSystem::Gravity(const valarray<double> position, const double t){
-    valarray<double> DX(nPlanets*6);
-    valarray<double> temp(3);
-    double x, y, z;
+valarray<long double> SolarSystem::Gravity(const valarray<long double> position, const long double t){
+    
+    valarray<long double> DX(nPlanets*6);
+    valarray<long double> temp(6);
+    long double x, y, z;
     for(int i=0; i<6; i++) temp[i] = 0;
     for(int i=0; i<nPlanets*6; i++) DX[i] = 0;
     
@@ -296,7 +298,7 @@ valarray<double> SolarSystem::Gravity(const valarray<double> position, const dou
 }
 
 //Function for having a look at any one planet's current position
-valarray<double> SolarSystem::CurrentPosition(int myplanet){
+valarray<long double> SolarSystem::CurrentPosition(int myplanet){
     if ( myplanet >= nPlanets || myplanet < 0){
         //Default -- return the position of the zero index planet
         return(Planets[0].CurrentPosition());
@@ -305,8 +307,8 @@ valarray<double> SolarSystem::CurrentPosition(int myplanet){
 }
 
 //Function for having a look at all planets current positions at specified timestep
-vector<valarray<double> > SolarSystem::CurrentPositionAllPlanets(int mystep){
-    vector<valarray<double> > positions(nPlanets);
+vector<valarray<long double> > SolarSystem::CurrentPositionAllPlanets(int mystep){
+    vector<valarray<long double> > positions(nPlanets);
     for(int i=0; i<nPlanets; i++) {
         positions[i] = Planets[i].CurrentPosition(mystep);
     }
@@ -314,32 +316,32 @@ vector<valarray<double> > SolarSystem::CurrentPositionAllPlanets(int mystep){
 }
 
 //Function that updates the future positions of all planets
-void SolarSystem::UpdateFuturePositions(vector<valarray<double> > xfuture) {
+void SolarSystem::UpdateFuturePositions(vector<valarray<long double> > xfuture) {
     for(int i=0; i<nPlanets; i++) {
         Planets[i].SaveFuturePosition(xfuture[i]);
     }
 }
 
-void SolarSystem::Iterate(vector<valarray<double> > xnew) {
+void SolarSystem::Iterate(vector<valarray<long double> > xnew) {
     nSteps++;
     for(int i=0; i<nPlanets; i++) Planets[i].Iterate(xnew[i], nSteps*Timestep);
 }
 
 //Version of the Runge Kutta integrator which operates on a SolarSystem object
 //Runge Kutta integration step
-valarray<double> RungeKuttaSystem(SolarSystem &system) {
+valarray<long double> RungeKuttaSystem(SolarSystem &system) {
     int number_of_planets = system.NumberOfPlanets();
-    valarray<double> temp(6);
+    valarray<long double> temp(6);
     int size = 6*number_of_planets;
-    valarray<double> xold(size), xnew(size);
+    valarray<long double> xold(size), xnew(size);
     //Setting up the input vector
     for(int i=0; i<number_of_planets; i++) {
         temp = system.CurrentPosition(i);
         for(int j=0; j<6; j++) xold[6*i+j] = temp[j];
     }
-    valarray<double> k1(size), k2(size), k3(size), k4(size);
-    double h = system.MyTimestep();
-    double t = h*system.NumberOfSteps();
+    valarray<long double> k1(size), k2(size), k3(size), k4(size);
+    long double h = system.MyTimestep();
+    long double t = h*system.NumberOfSteps();
     k1=h*system.Gravity(xold,t);
     k2=h*system.Gravity(xold+k1,t+h/2);
     k3=h*system.Gravity(xold+(.5)*k2,t+h/2);
@@ -349,10 +351,10 @@ valarray<double> RungeKuttaSystem(SolarSystem &system) {
 }
 
 //Version of the predictor-corrector integrator that operates on a SolarSystem object
-vector<valarray<double> > PredictorCorrectorSystem(SolarSystem &system){
+vector<valarray<long double> > PredictorCorrectorSystem(SolarSystem &system){
     int number_of_planets = system.NumberOfPlanets();
-    vector<valarray<double> > xold(number_of_planets), xnew(number_of_planets);
-    vector<valarray<double> > der_xm1(number_of_planets), der_xm2(number_of_planets), der_xm3(number_of_planets), der_xold(number_of_planets), der_xp1(number_of_planets), xp1(number_of_planets);
+    vector<valarray<long double> > xold(number_of_planets), xnew(number_of_planets);
+    vector<valarray<long double> > der_xm1(number_of_planets), der_xm2(number_of_planets), der_xm3(number_of_planets), der_xold(number_of_planets), der_xp1(number_of_planets), xp1(number_of_planets);
     
     xold = system.CurrentPositionAllPlanets(0);
     
@@ -365,7 +367,7 @@ vector<valarray<double> > PredictorCorrectorSystem(SolarSystem &system){
     //cout << der_xold[0][0] << " " << der_xold[0][1] << " " << der_xold[0][2] << " " << der_xold[0][3] << endl;
     
     //Getting the time step
-    double h = system.MyTimestep();
+    long double h = system.MyTimestep();
     
     //Adams-Bashford Prediction step
     for(int i=0; i<number_of_planets; i++) xp1[i] = xold[i] + h*(55./24.*der_xold[i] - 59./24.*der_xm1[i] + 37./24.*der_xm2[i] - 0.375*der_xm3[i]);
@@ -391,9 +393,9 @@ void StepTheSystem(SolarSystem &system) {
     int number_of_planets = system.NumberOfPlanets();
     int nsteps = system.NumberOfSteps();
     
-    vector<valarray<double> > xnew(number_of_planets);
-    valarray<double> temp(6);
-    valarray<double> end_position(6*number_of_planets); //Our output vector
+    vector<valarray<long double> > xnew(number_of_planets);
+    valarray<long double> temp(6);
+    valarray<long double> end_position(6*number_of_planets); //Our output vector
     
     if(nsteps < 3){
         //Using Runge-Kutta
@@ -422,7 +424,7 @@ void StepTheSystem(SolarSystem &system) {
 
 //Run the whole shebang for a specified period of time (in seconds)
 //This includes collision checking and the writing of output for each planet's position
-void RunTheSystem(SolarSystem &system, double max_time) {
+void RunTheSystem(SolarSystem &system, long double max_time) {
     bool collided = 0;
     while(system.MyTimestep()*system.NumberOfSteps() < max_time && !collided) {
         StepTheSystem(system);

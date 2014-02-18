@@ -10,10 +10,10 @@
 #include "solarsystem.h"
 
 //gives acceleration from Sun's gravitational potential
-valarray<double> gravitySun(const valarray<double> xold, const double t) {
-	valarray<double> DX(6);
-	const double x = xold[0]; const double y = xold[1]; const double z = xold[2];
-	const double vx = xold[3]; const double vy = xold[4]; const double vz = xold[5];
+valarray<long double> gravitySun(const valarray<long double> xold, const long double t) {
+	valarray<long double> DX(6);
+	const long double x = xold[0]; const long double y = xold[1]; const long double z = xold[2];
+	const long double vx = xold[3]; const long double vy = xold[4]; const long double vz = xold[5];
 	
 	//position derivative is velocity
 	DX[0] = vx; DX[1] = vy; DX[2] = vz;
@@ -27,37 +27,37 @@ valarray<double> gravitySun(const valarray<double> xold, const double t) {
 
 
 //rotation functions
-void rotateZ(double& x, double& y, double& z, double theta) {
-	double xold = x; double yold = y;
+void rotateZ(long double& x, long double& y, long double& z, long double theta) {
+	long double xold = x; long double yold = y;
 	x = xold*cos(theta)-yold*sin(theta);
 	y = xold*sin(theta)+yold*cos(theta);
 }
 
-void rotateX(double& x, double& y, double& z, double theta) {
-	double yold = y; double zold = z;
+void rotateX(long double& x, long double& y, long double& z, long double theta) {
+	long double yold = y; long double zold = z;
 	y = yold*cos(theta)-zold*sin(theta);
 	z = yold*sin(theta)+zold*cos(theta);
 }
 
 //converts orbital elements and angle to position and velocity
 //all input angles in degrees
-valarray<double> orbitalElementConverter(double semimajor, double semiminor, double inclination, double ascendingNode, double argumentPerihelion, double angle) {
+valarray<long double> orbitalElementConverter(long double semimajor, long double semiminor, long double inclination, long double ascendingNode, long double argumentPerihelion, long double angle) {
 
-	valarray<double> myX(6);
-	double eccentricity = sqrt(1-semiminor*semiminor/semimajor/semimajor);
-	double xSun = eccentricity*semimajor;
-	double ySun = 0; double zSun = 0;
+	valarray<long double> myX(6);
+	long double eccentricity = sqrt(1-semiminor*semiminor/semimajor/semimajor);
+	long double xSun = eccentricity*semimajor;
+	long double ySun = 0; long double zSun = 0;
 	
-	double x = 1/sqrt(cos(angle*M_PI/180)*cos(angle*M_PI/180)/semimajor/semimajor+sin(angle*M_PI/180)*sin(angle*M_PI/180)/semiminor/semiminor)*cos(angle*M_PI/180);
-	double y = 1/sqrt(cos(angle*M_PI/180)*cos(angle*M_PI/180)/semimajor/semimajor+sin(angle*M_PI/180)*sin(angle*M_PI/180)/semiminor/semiminor)*sin(angle*M_PI/180);
-	double z = 0;
+	long double x = 1/sqrt(cos(angle*M_PI/180)*cos(angle*M_PI/180)/semimajor/semimajor+sin(angle*M_PI/180)*sin(angle*M_PI/180)/semiminor/semiminor)*cos(angle*M_PI/180);
+	long double y = 1/sqrt(cos(angle*M_PI/180)*cos(angle*M_PI/180)/semimajor/semimajor+sin(angle*M_PI/180)*sin(angle*M_PI/180)/semiminor/semiminor)*sin(angle*M_PI/180);
+	long double z = 0;
 
 	//get position, direction of velocity
-	double slope = x/y*semiminor*semiminor/semimajor/semimajor;
-	double theta = atan(slope);
+	long double slope = x/y*semiminor*semiminor/semimajor/semimajor;
+	long double theta = atan(slope);
 	if(y==0) {theta=M_PI/2;}
-	double vx = cos(theta);
-	double vy = sin(theta);
+	long double vx = cos(theta);
+	long double vy = sin(theta);
 	if(0 <= angle && angle < 90) {
 		vx = -fabs(vx);
 		vy = fabs(vy);
@@ -71,26 +71,26 @@ valarray<double> orbitalElementConverter(double semimajor, double semiminor, dou
 		vx = fabs(vx);
 		vy = fabs(vy);
 	}
-	double vz = 0;
+	long double vz = 0;
 	
 	//calculate energy per mass of satellite
-	double EPerMass = G*Msun/semimajor/(1-eccentricity)-1/2*G*Msun/(semimajor-xSun);
-	double radius = sqrt((x-xSun)*(x-xSun)+(y-ySun)*(y-ySun));
-	double vmag = sqrt(2*(EPerMass+G*Msun/radius));
+	long double EPerMass = G*Msun/semimajor/(1-eccentricity)-1/2*G*Msun/(semimajor-xSun);
+	long double radius = sqrt((x-xSun)*(x-xSun)+(y-ySun)*(y-ySun));
+	long double vmag = sqrt(2*(EPerMass+G*Msun/radius));
 	cout<<"En v: "<<vmag<<endl;
 	cout<<eccentricity<<endl;
 
 	//calculate angular momentum per mass
-	double vperi2 = 2*G*Msun/semimajor/(1-eccentricity);
+	long double vperi2 = 2*G*Msun/semimajor/(1-eccentricity);
 	vperi2 = G*Msun/semimajor*(1+eccentricity)/(1-eccentricity);
-	double LPerMass = sqrt(vperi2)*(semimajor-xSun);
+	long double LPerMass = sqrt(vperi2)*(semimajor-xSun);
 	
 	//calculate magnitude of velocity
 	//mag. of cross product of radius to sun and velocity
-	double xR = x-xSun;
-	double yR = y-ySun;
-	double mag_cross = fabs(vx*yR-vy*xR)/sqrt(xR*xR+yR*yR);
-	double mag_v = LPerMass/mag_cross/sqrt(xR*xR+yR*yR);
+	long double xR = x-xSun;
+	long double yR = y-ySun;
+	long double mag_cross = fabs(vx*yR-vy*xR)/sqrt(xR*xR+yR*yR);
+	long double mag_v = LPerMass/mag_cross/sqrt(xR*xR+yR*yR);
 	cout<<"L v: "<<mag_v<<endl;
 	vx *= mag_v;
 	vy *= mag_v;
@@ -98,7 +98,7 @@ valarray<double> orbitalElementConverter(double semimajor, double semiminor, dou
 	//perform rotations for ascending node and inclination
 	//cout<<"test: "<<sqrt(x*x+y*y+z*z)<<endl;
 	
-	double delta = ascendingNode - argumentPerihelion;
+	long double delta = ascendingNode - argumentPerihelion;
 	rotateZ(x,y,z,-delta*M_PI/180); rotateZ(vx,vy,vz,-delta*M_PI/180); rotateZ(xSun,ySun,zSun,-delta*M_PI/180);
 	rotateX(x,y,z,inclination*M_PI/180); rotateX(vx,vy,vz,inclination*M_PI/180);
 	

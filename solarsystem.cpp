@@ -14,31 +14,31 @@
 
 int main(int argc, char **argv) {
 
-    //valarray<double> test = orbitalElementConverter(1.5e11,1.5e11,0,0,0,0);
+    //valarray<long double> test = orbitalElementConverter(1.5e11,1.5e11,0,0,0,0);
     //cout<<"Orbital elements test"<<endl;
     //cout<<test[0]<<" "<<test[1]<<" "<<test[2]<<" "<<test[3]<<" "<<test[4]<<" "<<test[5]<<endl;
 
     //Initialize the solar system
     //Note that this includes setting the timestep
     SolarSystem system;
-    double dt = 3600.;
+    long double dt = 3600.;
     system.Initialize(dt, "");
     
     //Add the Sun as a planet
-    valarray<double> solar_position(6);
+    valarray<long double> solar_position(6);
     solar_position[0] = 0.; solar_position[1] = 0.; solar_position[2] = 0.;
     solar_position[3] = 0.; solar_position[4] = -0.0894690; solar_position[5] = 0.;
     system.AddPlanet(1.9891e30, 6.96e8, solar_position, 0., "TheSun");
     
     //Add the Earth as a planet
-    valarray<double> initial(6);
-    double eccEarth = 0.;//.01671;
-    double semimajorEarth = 1.49498e11; //m
-    double semiminorEarth = semimajorEarth*sqrt(1-eccEarth*eccEarth); //m
-    double incEarth = 0; //1.+34/60. ; //degrees
-    double ascNodeEarth = 0.; //348.74; //degrees
-    double argPeriEarth = 0.;// 114.21; //degrees
-    double startAngle = 0;
+    valarray<long double> initial(6);
+    long double eccEarth = 0.;//.01671;
+    long double semimajorEarth = 1.49498e11; //m
+    long double semiminorEarth = semimajorEarth*sqrt(1-eccEarth*eccEarth); //m
+    long double incEarth = 0; //1.+34/60. ; //degrees
+    long double ascNodeEarth = 0.; //348.74; //degrees
+    long double argPeriEarth = 0.;// 114.21; //degrees
+    long double startAngle = 0;
     //initial conditions set to ascending node
     initial = orbitalElementConverter(semimajorEarth,semiminorEarth,incEarth,ascNodeEarth,argPeriEarth,startAngle);
     system.AddPlanet(5.972e24, 6.371e6, initial, 0., "TheEarth");
