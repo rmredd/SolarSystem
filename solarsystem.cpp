@@ -9,11 +9,13 @@
 
 #include "solarsystem.h"
 #include "orbital.h"
+#include "parameter_readin.h"
 
 int main(int argc, char **argv) {
     //Time to figure out the input arguments
     if(argc < 2) {
         cout << "ERROR: Insufficient number of arguments" << endl;
+        cout << "FORMAT: " << endl;
         exit(1);
     }
     //Arguments needed:
@@ -32,6 +34,11 @@ int main(int argc, char **argv) {
     //How often to output positions
     //Default is every time step
 
+    //Read the input file
+    vector<valarray<long double> > positions;
+    vector<string> names;
+    positions = ReadParameterFile(filename, 0, names);
+    
     //Initialize the solar system
     //Note that this includes setting the timestep
     SolarSystem system;
