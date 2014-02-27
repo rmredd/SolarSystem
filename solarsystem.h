@@ -135,6 +135,9 @@ public:
     vector<valarray<long double> > Gravity(int); //Calculates dervative at current time step
     valarray<long double> Gravity(const valarray<long double>, const long double); //Same, but works with Runge Kutta
     
+    //Utility function for centering on the system's center of mass
+    void MoveToCenterOfMass(void);
+    
     //Some input-and-output array creation items necessary for iteration setup
     int NumberOfPlanets(void) {return(nPlanets);};
     int NumberOfSteps(void) {return(nSteps);};
@@ -297,6 +300,28 @@ valarray<long double> SolarSystem::Gravity(const valarray<long double> position,
     return(DX);
 }
 
+//Function for recentering the system, so it doesn't wander too much
+//Sets [0, 0, 0] to be stationary center of the system
+void SolarSystem::MoveToCenterOfMass() {
+    //Set up some variables
+    long double total_mass=0;
+    valarray<long double> centerOfMass(6);
+    for(int i=0; i<6; i++) centerOfMass[i] = 0;
+    
+    //First, calculate the center of mass of the system
+    for(int i=0; i<nPlanets; i++){
+        total_mass += Planets[i].Mass();
+        centerOfMass += Planets[i].CurrentPosition()*Planets[i].Mass();
+    }
+    centerOfMass /= total_mass;
+    
+    //Now, substract the center of mass position and velocity for each planet
+    for(int i=0; i<nPlanets; i++){
+        Planets[i].Initialize(Planets[i].Mass(), Planets[i].Radius(), Planets[i].CurrentPosition()-centerOfMass, Planets[i].CurrentTime(), Planets[i].MyNameIs());
+    }
+    
+}
+
 //Function for having a look at any one planet's current position
 valarray<long double> SolarSystem::CurrentPosition(int myplanet){
     if ( myplanet >= nPlanets || myplanet < 0){
@@ -322,6 +347,7 @@ void SolarSystem::UpdateFuturePositions(vector<valarray<long double> > xfuture) 
     }
 }
 
+//
 void SolarSystem::Iterate(vector<valarray<long double> > xnew) {
     nSteps++;
     for(int i=0; i<nPlanets; i++) Planets[i].Iterate(xnew[i], nSteps*Timestep);
