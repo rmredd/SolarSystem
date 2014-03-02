@@ -21,55 +21,76 @@ using std::ifstream;
 using std::fscanf;
 using std::string;
 
-vector<valarray<long double> > ReadParameterFile(string filename, int filetype, vector<string> & names) {
-    //Opening up the file
-    //Note that '#' is used as a comment character
+//This is the basic function that reads in a file; it reads in the first entry in each line as a name,
+//and the remaining nentries as long double inputs for later
+//Comments are indicated with "#"
+vector<valarray<long double> > ParameterFileBasicRead(string filename, int nentries, vector<string> & names){
+
+    //Figure out how big an object we'll need
     ifstream input;
     input.open(filename);
     string myline;
     int nlines = 0;
-    while(!input.eof()){
+    while(!input.eof()) {
         getline(input,myline);
         if(myline.find("#")==0) continue;
         nlines++;
     }
     input.close();
     
-    //Note that the positions valarray contains mass, radius, followed by position information
-    vector<string> mynames(nlines);
     vector<valarray<long double> > positions(nlines);
-    int place, place_end;
+    valarray<long double> xtemp(nentries);
+    vector<string> mynames(nlines);
+    
+    int linecount = 0, place, place_end;
+    input.open(filename);
+    for(int i=0; i<nlines; i++) {
+        getline(input,myline);
+        //Extract the name of the planet first
+        mynames[i] = myline.substr(0,myline.find(" "));
+        myline.erase(0,myline.find(" "));
+        while(myline.find(" ")==0) myline.erase(0,1);
+        place=0;
+        for(int j=0; j<8; j++){
+            place_end = myline.find(" ",place);
+            if(place_end==string::npos) place_end = myline.length()-1;
+            if(j<7 && place_end == myline.length()-1) {
+                cout << "WARNING: Error in file readin at line " << i << endl;
+                cout << "         Insufficient entries in line for chosen format" << endl;
+                break;
+            }
+            xtemp[j] = atof(myline.substr(place,place_end).c_str());
+            place = place_end;
+            while(myline.find(" ",place)==place){
+                place++;
+            }
+        }
+        positions[i] = xtemp;
+    }
+    input.close();
+    
+    //Fill out the names vector
+    names = mynames;
+    
+    return(positions);
+}
+
+vector<valarray<long double> > ReadParameterFile(string filename, int filetype, vector<string> & names) {
+    
+    //Note that the positions valarray contains mass, radius, followed by position information
+    vector<valarray<long double> > positions;
     switch (filetype) {
         case 0:
         {
             //Name(string), X, Y, Z, VX, VY, VZ position data
-            input.open(filename);
-            valarray<long double> xtemp(6);
-            for(int i=0; i<nlines; i++) {
-                getline(input,myline);
-                //Extract the name of the planet first
-                mynames[i] = myline.substr(0,myline.find(" "));
-                myline.erase(0,myline.find(" "));
-                while(myline.find(" ")==0) myline.erase(0,1);
-                place=0;
-                for(int j=0; j<6; j++){
-                    place_end = myline.find(" ",place);
-                    if(place_end==string::npos) place_end = myline.length()-1;
-                    xtemp[j] = atof(myline.substr(place,place_end).c_str());
-                    place = place_end;
-                    while(myline.find(" ",place)==place){
-                        place++;
-                    }
-                }
-                positions[i] = xtemp;
-            }
-            input.close();
+            positions = ParameterFileBasicRead(filename, 8, names);
         }
             break;
         case 1:
             //Orbital elements -- will need to be converted at some point
+            //Input lines must contain name, mass, radius, semimajor axis, eccentricity, inclination, ascending node, argument of perihelion, angle
         {
-            printf("WARNING: Orbital element readin not yet implemented");
+            positions = ParameterFileBasicRead(filename, 8, names);
         }
             break;
         default:
@@ -78,8 +99,10 @@ vector<valarray<long double> > ReadParameterFile(string filename, int filetype, 
     }
     
     //Sanity check section -- print out what we read in
+    /*
     cout << "READIN TEST: " << mynames[0] << " " << positions[0][0] << " " << positions[0][1] << " " << positions[0][2] << " " << positions[0][5] << endl;
     cout << "READIN TEST: " << mynames[1] << " " << positions[1][0] << " " << positions[1][1] << " " << positions[1][2] << " " << positions[1][3] << " " << positions[1][4] << " " << positions[1][5] << endl;
+     */
     
     return(positions);
 }

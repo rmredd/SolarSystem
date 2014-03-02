@@ -18,6 +18,8 @@ int main(int argc, char **argv) {
         cout << "FORMAT: " << endl;
         exit(1);
     }
+    
+    int myarg = 0;
     //Arguments needed:
     //Input file name
     string filename = argv[1];
