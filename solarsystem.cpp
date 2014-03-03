@@ -20,6 +20,7 @@ int main(int argc, char **argv) {
     }
     
     int myarg = 0;
+    int filetype = 0;
     //Arguments needed:
     //Input file name
     string filename = argv[1];
@@ -35,45 +36,34 @@ int main(int argc, char **argv) {
     
     //How often to output positions
     //Default is every time step
+    filetype = 0;
+    
+    //Where to place the output files
+    //Default is current working directory
+    string output_directory = "";
 
     //Read the input file
     vector<valarray<long double> > positions;
     vector<string> names;
-    positions = ReadParameterFile(filename, 0, names);
+    cout << "Ready for readin" << endl;
+    positions = ReadParameterFile(filename, filetype, names);
+    cout << "Readin complete" << endl;
     
     //Initialize the solar system
     //Note that this includes setting the timestep
     SolarSystem system;
     long double dt = 3600.;
-    system.Initialize(dt, "");
-    
-    //Add the Sun as a planet
-    valarray<long double> solar_position(6);
-    solar_position[0] = 0.; solar_position[1] = 0.; solar_position[2] = 0.;
-    solar_position[3] = 0.; solar_position[4] = -0.0894690; solar_position[5] = 0.;
-    system.AddPlanet(1.9891e30, 6.96e8, solar_position, 0., "TheSun");
-    
-    //Add the Earth as a planet
-    valarray<long double> initial(6);
-    long double eccEarth = 0.01671;
-    long double semimajorEarth = 1.49498e11; //m
-    long double semiminorEarth = semimajorEarth*sqrt(1-eccEarth*eccEarth); //m
-    long double incEarth = 1.+34/60. ; //degrees
-    long double ascNodeEarth = 348.74; //degrees
-    long double argPeriEarth = 114.21; //degrees
-    long double startAngle = 0;
-    //initial conditions set to ascending node
-    initial = orbitalElementConverter(semimajorEarth,semiminorEarth,incEarth,ascNodeEarth,argPeriEarth,startAngle);
-    system.AddPlanet(5.972e24, 6.371e6, initial, 0., "TheEarth");
+    system.Initialize(dt, output_directory);
 
-    cout<<initial[0]<<" "<<initial[1]<<" "<<initial[2]<<" "<<initial[3]<<" "<<initial[4]<<" "<<initial[5]<<endl;
-    cout<<"Radius: "<<sqrt(initial[0]*initial[0]+initial[1]*initial[1])<<endl;
-    cout<<"Velocity: "<<sqrt(initial[3]*initial[3]+initial[4]*initial[4])<<endl;
-    cout<<incEarth*M_PI/180<<endl;
-    
-    //Add Jupiter as a planet
-    initial = orbitalElementConverter(7.785e11, 7.785e11*sqrt(1-0.0488*0.0488), 1.305, 100.492, 275.066, 0);
-    system.AddPlanet(1.899e27, 7.15e7, initial, 0, "Jupiter");
+    //Add all the desired input objects
+    valarray<long double> xtemp(6);
+    for(int i=0; i<positions.size(); i++) {
+        for(int j=0; j<6; j++){
+            xtemp[j] = positions[i][j+2];
+        }
+        system.AddPlanet(positions[i][0], positions[i][1], xtemp, 0, names[i]);
+    }
+    cout << "Done initializing " << positions.size() << " objects" << endl;
 
     //Recenter our system on the center of mass
     system.MoveToCenterOfMass();
