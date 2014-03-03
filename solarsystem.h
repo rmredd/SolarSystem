@@ -450,13 +450,15 @@ void StepTheSystem(SolarSystem &system) {
 
 //Run the whole shebang for a specified period of time (in seconds)
 //This includes collision checking and the writing of output for each planet's position
-void RunTheSystem(SolarSystem &system, long double max_time) {
+void RunTheSystem(SolarSystem &system, long double max_time, int steps_between_prints) {
     bool collided = 0;
+    long nsteps=1;
     while(system.MyTimestep()*system.NumberOfSteps() < max_time && !collided) {
         StepTheSystem(system);
         //cout << "Running at step: " << system.NumberOfSteps() << endl;
+        if(nsteps % steps_between_prints == 0) system.PrintPlanets();
         collided = system.CheckForCollision();
-        system.PrintPlanets();
+        nsteps++;
     }
 }
 

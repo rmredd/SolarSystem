@@ -53,6 +53,7 @@ int main(int argc, char **argv) {
     long double run_time = 10;
     int steps_between_prints = 1;
     string output_directory = "";
+    bool do_recenter = 1;
     string filename;
     
     string temp_string;
@@ -86,6 +87,9 @@ int main(int argc, char **argv) {
                 //Default is current working directory
                 output_directory = argv[my_arg+1];
                 my_arg += 2;
+            } else if(temp_string.find("--norecenter")==0) {
+                //Turning off recentering
+                do_recenter = 0;
             } else if(temp_string.find("-h")==0 || temp_string.find("--h")==0) {
                 //Catching help requests overrides any run routines -- print help and exit
                 PrintHelp();
@@ -149,12 +153,12 @@ int main(int argc, char **argv) {
     cout << "Done initializing " << positions.size() << " objects" << endl;
 
     //Recenter our system on the center of mass
-    system.MoveToCenterOfMass();
+    if(do_recenter) system.MoveToCenterOfMass();
     
     //Run everything!
     cout << "Ready to run!" << endl;
     system.PrintPlanets();
-    RunTheSystem(system, run_time*365.24*24.*3600.);
+    RunTheSystem(system, run_time*365.24*24.*3600.,steps_between_prints);
 
 return(0);
 }
