@@ -11,6 +11,10 @@
 #include "orbital.h"
 #include "parameter_readin.h"
 
+#include <stdio.h>
+
+using std::fopen;
+
 //Descriptive help function, explaining the basics of how to use everything.  Exits after running
 void PrintHelp(void) {
     
@@ -129,6 +133,16 @@ int main(int argc, char **argv) {
         cout << "WARNING: Number of steps per printout must be at least 1.  Setting to 1." << endl;
         steps_between_prints = 1;
     }
+    //And complain if we can't find the requested output directory
+    FILE * testFile;
+    char * output_dir_char = (char *) output_directory.c_str();
+    testFile = fopen(output_dir_char, "r");
+    if(testFile==NULL) {
+        cout << "WARNING: Requested output directory does not exist.  Defaulting to current" << endl;
+        cout << "         working directory." << endl;
+        output_directory = "";
+    }
+    fclose(testFile);
 
     //Read the input file
     vector<valarray<long double> > positions;

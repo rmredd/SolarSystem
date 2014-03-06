@@ -14,6 +14,8 @@
 #include <fstream>
 #include <string>
 
+#include "orbital.h"
+
 using std::vector;
 using std::valarray;
 using std::fstream;
@@ -82,7 +84,7 @@ vector<valarray<long double> > ReadParameterFile(string filename, int filetype, 
     switch (filetype) {
         case 0:
         {
-            //Name(string), X, Y, Z, VX, VY, VZ position data
+            //Name(string), mass, radius, X, Y, Z, VX, VY, VZ position data
             positions = ParameterFileBasicRead(filename, 8, names);
         }
             break;
@@ -91,6 +93,17 @@ vector<valarray<long double> > ReadParameterFile(string filename, int filetype, 
             //Input lines must contain name, mass, radius, semimajor axis, eccentricity, inclination, ascending node, argument of perihelion, angle
         {
             positions = ParameterFileBasicRead(filename, 8, names);
+            //Run the conversion from orbital elements to X, Y, Z, VX, VY, VZ
+            valarray<long double> xtemp(6);
+            for(int i=0; i<positions.size(); i++) {
+                for(int j=0; j<6; j++) xtemp[j] = positions[i][2+j];
+                //Convert eccentricity to semiminor axis length
+                xtemp[1] = xtemp[0]*(1-xtemp[1]*xtemp[1]);
+                //Do the conversion
+                xtemp = orbitalElementConverter(xtemp[0], xtemp[1], xtemp[2], xtemp[3], xtemp[4], xtemp[5]);
+                //Save the converted elements
+                for(int j=0; j<6; j++) positions[i][j+2] = xtemp[j];
+            }
         }
             break;
         default:
