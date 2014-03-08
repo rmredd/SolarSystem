@@ -32,28 +32,55 @@ vector<valarray<long double> > ParameterFileBasicRead(string filename, int nentr
     ifstream input;
     input.open(filename);
     string myline;
-    int nlines = 0;
+    vector<int> is_comment;
+    int nlines = 0; int nplanets = 0;
     while(!input.eof()) {
         getline(input,myline);
-        if(myline.find("#")==0) continue;
         nlines++;
+        if(myline.find("#")==0) {
+            is_comment.push_back(1);
+        } else {
+            nplanets++;
+            is_comment.push_back(0);
+        }
     }
     input.close();
     
-    vector<valarray<long double> > positions(nlines);
+    vector<valarray<long double> > positions(nplanets);
     valarray<long double> xtemp(nentries);
-    vector<string> mynames(nlines);
+    vector<string> mynames(nplanets);
     
-    int linecount = 0, place, place_end;
+    cout << "Reading in " << nplanets << " objects" << endl;
+    //for(int i=0; i<nlines; i++) cout << is_comment[i] << " ";
+    //cout << endl;
+    
+    int i_planet = 0, place, place_end, name_end;
     input.open(filename);
     for(int i=0; i<nlines; i++) {
+        //cout << "LINE READ: " << i << " of " << nlines << " " << is_comment[i] << endl;
         getline(input,myline);
+        //Check that this isn't a comment
+        if(is_comment[i]==1) {
+            //cout << "COMMENT!!" << endl;
+            continue;
+        }
+        
         //Extract the name of the planet first
-        mynames[i] = myline.substr(0,myline.find(" "));
-        myline.erase(0,myline.find(" "));
-        while(myline.find(" ")==0) myline.erase(0,1);
+        //for(int j=0; j<nlines; j++) cout << is_comment[j] << " ";
+        //cout << endl;
+        name_end = myline.find(" ");
+        mynames[i_planet] = myline.substr(0,name_end);
+        //for(int j=0; j<nlines; j++) cout << is_comment[j] << " ";
+        //cout << endl;
+        cout << mynames[i_planet] << endl;
+        myline.erase(0,name_end);
+        //cout << myline << endl;
+        while(myline.find(" ")==0) {
+            myline.erase(0,1);
+        }
         place=0;
-        for(int j=0; j<8; j++){
+        for(int j=0; j<nentries; j++){
+            //cout << "    Entry: " << j << " of " << nentries << endl;
             place_end = myline.find(" ",place);
             if(place_end==string::npos) place_end = myline.length()-1;
             if(j<7 && place_end == myline.length()-1) {
@@ -63,12 +90,20 @@ vector<valarray<long double> > ParameterFileBasicRead(string filename, int nentr
             }
             xtemp[j] = atof(myline.substr(place,place_end).c_str());
             place = place_end;
+            //cout << "    " << j << " " << xtemp[j] << endl;
             while(myline.find(" ",place)==place){
                 place++;
             }
         }
-        positions[i] = xtemp;
+        //for(int j=0; j<nentries; j++) cout << xtemp[j] << " ";
+        //cout << endl;
+        positions[i_planet] = xtemp;
+        //cout << i << " " << xtemp[0] << endl;
+        i_planet++;
+        //cout << "Out of the loop" << endl;
     }
+    cout << positions[0][0] << " " << positions[1][0] << endl;
+    cout << "Finished reading" << endl;
     input.close();
     
     //Fill out the names vector
