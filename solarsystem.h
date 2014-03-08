@@ -30,14 +30,17 @@ using std::string;
 class Planet {
 public:
 	void Initialize(long double, long double, valarray<long double>, long double, string);
-	void Iterate(valarray<long double>, long double);
+	void Iterate(valarray<long double>, valarray<long double>, long double);
 	long double CurrentTime(void) {return(planetTime);};
     long double Radius(void) {return(planetRadius);};
     long double Mass(void) {return(planetMass);};
     valarray<long double> CurrentPosition(void) {return(X);};
     valarray<long double> CurrentPosition(int); //Returns position at specified step
+    valarray<long double> CurrentDerivative(int); //Return derivatives at given step
     void SaveFuturePosition(valarray<long double>); //Save a future position
-	valarray<long double> Gravity(const valarray<long double>, const long double); //Gravity acting on another body
+    void SaveDerivative(valarray<long double>, int); //Save derivative at specific timestep
+	
+    valarray<long double> Gravity(const valarray<long double>, const long double); //Gravity acting on another body
     valarray<long double> PositionDerivative(void); //Velocity derivative part
     
     string MyNameIs(void) {return(Name);} //returns planet's name as a string
@@ -46,11 +49,19 @@ private:
 	long double planetMass;  //kg
 	long double planetTime;  //current time in s
     long double planetRadius; //planet's radius in m
+    //Position/velocity vectors
 	valarray<long double> X;  //first 3 values x, y, z; next 3 values velocity, m/s
     valarray<long double> X1; //location at current timestep-1
     valarray<long double> X2; //location at current timestep-2
     valarray<long double> X3; //location at current timestep-3
     valarray<long double> Xfuture; //location at future timestep+1
+    //Derivative vectors -- useful for predictor-corrector
+    valarray<long double> DX;
+    valarray<long double> DX1;
+    valarray<long double> DX2;
+    valarray<long double> DX3;
+    valarray<long double> DXfuture;
+    
     string Name; //Name of the planet
 };
 
@@ -67,11 +78,14 @@ void Planet::Initialize(long double mass, long double radius, valarray<long doub
     Name = myName;
 }
 
-void Planet::Iterate(valarray<long double> pos, long double time) {
+void Planet::Iterate(valarray<long double> pos, valarray<long double> der, long double time) {
     X3 = X2;
     X2 = X1;
     X1 = X;
 	X = pos;
+    DX3 = DX2;
+    DX2 = DX1;
+    DX1 = der;
 	planetTime = time;
 }
 
@@ -99,6 +113,47 @@ valarray<long double> Planet::CurrentPosition(int mystep){
     }
 }
 
+//Returns planet's derivative at a given relative timestep
+valarray<long double> Planet::CurrentDerivative(int mystep) {
+    switch(mystep){
+        case 0:
+            return(DX);
+        case 1:
+            return(DX1);
+        case 2:
+            return(DX2);
+        case 3:
+            return(DX3);
+        case -1:
+            return(DXfuture); //returns a position from the future
+        default:
+            return(DX);
+    }
+}
+
+//Set the derivatives
+void Planet::SaveDerivative(valarray<long double> der, int mystep) {
+    switch(mystep){
+        case 0:
+            DX=der;
+            break;
+        case 1:
+            DX1=der;
+            break;
+        case 2:
+            DX2 = der;
+            break;
+        case 3:
+            DX3 = der;
+            break;
+        case -1:
+            DXfuture = der;
+            break;
+        default:
+            DX=der;
+    }
+}
+
 //Effect of a planet's gravity on another object at position x_else
 valarray<long double> Planet::Gravity(const valarray<long double> x_else, const long double t) {
 	valarray<long double> DX(6);
@@ -118,10 +173,10 @@ valarray<long double> Planet::Gravity(const valarray<long double> x_else, const 
 
 //Derivative -- note that this is constant velocities in the absence of other objects
 valarray<long double> Planet::PositionDerivative(){
-    valarray<long double> DX(6);
-    DX[0] = X[3]; DX[1] = X[4]; DX[2] = X[5];
-    DX[3] = 0.; DX[4] = 0.; DX[5] = 0.;
-    return(DX);
+    valarray<long double> dx(6);
+    dx[0] = X[3]; dx[1] = X[4]; dx[2] = X[5];
+    dx[3] = 0.; dx[4] = 0.; dx[5] = 0.;
+    return(dx);
 }
 
 //Main class for operating on everything
@@ -145,7 +200,7 @@ public:
     valarray<long double> CurrentPosition(int); //Returns current positions for one planet
     vector<valarray<long double> > CurrentPositionAllPlanets(int); //Returns indicated timestep position for all planets
     void UpdateFuturePositions(vector<valarray<long double> >); //Updates future positions for all planets
-    void Iterate(vector<valarray<long double> >); //Iterates, taking in the new position as current
+    void Iterate(vector<valarray<long double> >, vector<valarray<long double> >); //Iterates, taking in the new position as current, derivative as for previous step
     
 private:
     vector<Planet> Planets;
@@ -224,38 +279,45 @@ vector<valarray<long double> > SolarSystem::Gravity(int mystep){
     //Initialize our arrays
     valarray<long double> temp(6), temp2(6);
     long double x, y, z;
-    for(int i=0; i<6; i++) temp[i] = 0;
-    for(int i=0; i<nPlanets; i++) DX[i] = temp;
     
-    for(int i=0; i<nPlanets; i++){
-        for(int j=i; j<nPlanets; j++) {
-            if (i==j) {
-                //This is matching the planet against itself; move the velocities to get dx/dt
-                DX[i][0] = Planets[i].CurrentPosition(mystep)[3];
-                DX[i][1] = Planets[i].CurrentPosition(mystep)[4];
-                DX[i][2] = Planets[i].CurrentPosition(mystep)[5];
-            } else {
-                //Otherwise, we're comparing two planets.  Update dv/dt for both with gravity
-                temp = Planets[i].CurrentPosition(mystep);
-                temp2 = Planets[j].CurrentPosition(mystep);
-                x = temp[0] - temp2[0];
-                y = temp[1] - temp2[1];
-                z = temp[2] - temp2[2];
+    //First case -- time steps we don't already have derivatives for
+    if(mystep <= 0) {
+        for(int i=0; i<6; i++) temp[i] = 0;
+        for(int i=0; i<nPlanets; i++) DX[i] = temp;
+    
+        for(int i=0; i<nPlanets; i++){
+            for(int j=i; j<nPlanets; j++) {
+                if (i==j) {
+                    //This is matching the planet against itself; move the velocities to get dx/dt
+                    DX[i][0] = Planets[i].CurrentPosition(mystep)[3];
+                    DX[i][1] = Planets[i].CurrentPosition(mystep)[4];
+                    DX[i][2] = Planets[i].CurrentPosition(mystep)[5];
+                } else {
+                    //Otherwise, we're comparing two planets.  Update dv/dt for both with gravity
+                    temp = Planets[i].CurrentPosition(mystep);
+                    temp2 = Planets[j].CurrentPosition(mystep);
+                    x = temp[0] - temp2[0];
+                    y = temp[1] - temp2[1];
+                    z = temp[2] - temp2[2];
                 
-                temp[0] = -G/pow( (x*x+y*y+z*z), 1.5)*x;
-                temp[1] = -G/pow( (x*x+y*y+z*z), 1.5)*y;
-                temp[2] = -G/pow( (x*x+y*y+z*z), 1.5)*z;
-                DX[i][3] += Planets[j].Mass()*temp[0];
-                DX[i][4] += Planets[j].Mass()*temp[1];
-                DX[i][5] += Planets[j].Mass()*temp[2];
-                DX[j][3] -= Planets[i].Mass()*temp[0];
-                DX[j][4] -= Planets[i].Mass()*temp[1];
-                DX[j][5] -= Planets[i].Mass()*temp[2];
+                    temp[0] = -G/pow( (x*x+y*y+z*z), 1.5)*x;
+                    temp[1] = -G/pow( (x*x+y*y+z*z), 1.5)*y;
+                    temp[2] = -G/pow( (x*x+y*y+z*z), 1.5)*z;
+                    DX[i][3] += Planets[j].Mass()*temp[0];
+                    DX[i][4] += Planets[j].Mass()*temp[1];
+                    DX[i][5] += Planets[j].Mass()*temp[2];
+                    DX[j][3] -= Planets[i].Mass()*temp[0];
+                    DX[j][4] -= Planets[i].Mass()*temp[1];
+                    DX[j][5] -= Planets[i].Mass()*temp[2];
+                }
             }
         }
+    } else {
+        //Derivatives we've already computed -- we just need to pick them up
+        for(int i=0; i<nPlanets; i++) {
+            DX[i] = Planets[i].CurrentDerivative(mystep);
+        }
     }
-    
-    //cout << "Gravity test: " << mystep << " " << x << " " << y << " " << z << endl;
     
     return(DX);
 }
@@ -348,14 +410,14 @@ void SolarSystem::UpdateFuturePositions(vector<valarray<long double> > xfuture) 
 }
 
 //
-void SolarSystem::Iterate(vector<valarray<long double> > xnew) {
+void SolarSystem::Iterate(vector<valarray<long double> > xnew, vector<valarray<long double> > der) {
     nSteps++;
-    for(int i=0; i<nPlanets; i++) Planets[i].Iterate(xnew[i], nSteps*Timestep);
+    for(int i=0; i<nPlanets; i++) Planets[i].Iterate(xnew[i], der[i], nSteps*Timestep);
 }
 
 //Version of the Runge Kutta integrator which operates on a SolarSystem object
 //Runge Kutta integration step
-valarray<long double> RungeKuttaSystem(SolarSystem &system) {
+valarray<long double> RungeKuttaSystem(SolarSystem &system, valarray<long double> &der) {
     int number_of_planets = system.NumberOfPlanets();
     valarray<long double> temp(6);
     int size = 6*number_of_planets;
@@ -368,16 +430,17 @@ valarray<long double> RungeKuttaSystem(SolarSystem &system) {
     valarray<long double> k1(size), k2(size), k3(size), k4(size);
     long double h = system.MyTimestep();
     long double t = h*system.NumberOfSteps();
-    k1=h*system.Gravity(xold,t);
-    k2=h*system.Gravity(xold+k1,t+h/2);
-    k3=h*system.Gravity(xold+(.5)*k2,t+h/2);
-    k4=h*system.Gravity(xold+(.5)*k3,t+h);
-    xnew = xold+(k1+(2.0)*k2+(2.0)*k3+k4)/6;
+    k1=system.Gravity(xold,t);
+    k2=system.Gravity(xold+k1,t+h/2);
+    k3=system.Gravity(xold+(.5)*k2,t+h/2);
+    k4=system.Gravity(xold+(.5)*k3,t+h);
+    der = (k1+(2.0)*k2+(2.0)*k3+k4)/6;
+    xnew = xold+h*der;
     return(xnew);
 }
 
 //Version of the predictor-corrector integrator that operates on a SolarSystem object
-vector<valarray<long double> > PredictorCorrectorSystem(SolarSystem &system){
+vector<valarray<long double> > PredictorCorrectorSystem(SolarSystem &system, vector<valarray<long double> > &der){
     int number_of_planets = system.NumberOfPlanets();
     vector<valarray<long double> > xold(number_of_planets), xnew(number_of_planets);
     vector<valarray<long double> > der_xm1(number_of_planets), der_xm2(number_of_planets), der_xm3(number_of_planets), der_xold(number_of_planets), der_xp1(number_of_planets), xp1(number_of_planets);
@@ -389,8 +452,6 @@ vector<valarray<long double> > PredictorCorrectorSystem(SolarSystem &system){
     der_xm1 = system.Gravity(1);
     der_xm2 = system.Gravity(2);
     der_xm3 = system.Gravity(3);
-    
-    //cout << der_xold[0][0] << " " << der_xold[0][1] << " " << der_xold[0][2] << " " << der_xold[0][3] << endl;
     
     //Getting the time step
     long double h = system.MyTimestep();
@@ -405,7 +466,10 @@ vector<valarray<long double> > PredictorCorrectorSystem(SolarSystem &system){
     der_xp1 = system.Gravity(-1);
     
     //Adams-Moulton Correction step
-    for(int i=0; i<number_of_planets; i++) xnew[i] = xold[i] + h*( 0.375*der_xp1[i] + 19./24.*der_xold[i] - 5./24.*der_xm1[i] + 1./24.*der_xm2[i]);
+    for(int i=0; i<number_of_planets; i++) {
+        der[i] = 0.375*der_xp1[i] + 19./24.*der_xold[i] - 5./24.*der_xm1[i] + 1./24.*der_xm2[i];
+        xnew[i] = xold[i] + h*der[i];
+    }
     
     return(xnew);
 }
@@ -420,32 +484,37 @@ void StepTheSystem(SolarSystem &system) {
     int nsteps = system.NumberOfSteps();
     
     vector<valarray<long double> > xnew(number_of_planets);
-    valarray<long double> temp(6);
+    valarray<long double> temp(6), temp_der(6);
     valarray<long double> end_position(6*number_of_planets); //Our output vector
+    
+    valarray<long double> der_rk(6*number_of_planets); //RK derivative values
+    vector<valarray<long double> > der_pec(number_of_planets);//Predictor-corrector derivative values
     
     if(nsteps < 3){
         //Using Runge-Kutta
-        end_position = RungeKuttaSystem(system);
+        end_position = RungeKuttaSystem(system, der_rk);
         
         //And do a quick wrap-around to separate out the different planets
         for(int i=0; i<number_of_planets; i++) {
             for(int j=0; j<6; j++) {
                 temp[j] = end_position[6*i+j];
+                temp_der[j] = der_rk[6*i+j];
             }
             xnew[i] = temp;
+            der_pec[i] = temp_der;
         }
 
     
     } else {
         //Using PEC (predictor-corrector)
-        xnew = PredictorCorrectorSystem(system);
+        xnew = PredictorCorrectorSystem(system, der_pec);
         if (nsteps < 10) {
             cout << nsteps << " " << xnew[0][0] << " " << xnew[0][1] << " " << xnew[0][2] << endl;
         }
     }
     
     //Run each planet's internal iterations in order to update correctly
-    system.Iterate(xnew);
+    system.Iterate(xnew, der_pec);
 }
 
 //Run the whole shebang for a specified period of time (in seconds)
