@@ -12,11 +12,8 @@
 #include "parameter_readin.h"
 
 #include <stdio.h>
-#include <time.h>
 
 using std::fopen;
-using std::clock;
-using std::clock_t;
 
 //Descriptive help function, explaining the basics of how to use everything.  Exits after running
 void PrintHelp(void) {
@@ -174,12 +171,8 @@ int main(int argc, char **argv) {
     
     //Run everything!
     cout << "Ready to run!" << endl;
-    clock_t mytime;
-    mytime = clock();
     system.PrintPlanets();
     RunTheSystem(system, run_time*365.24*24.*3600.,steps_between_prints);
-    mytime = mytime-clock();
-    cout << "Run completed.  Time needed: "<< mytime << " s." << endl;
 
 return(0);
 }
