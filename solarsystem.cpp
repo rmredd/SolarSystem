@@ -15,8 +15,8 @@
 #include <time.h>
 
 using std::fopen;
-using std::clock;
-using std::clock_t;
+using std::time;
+using std::time_t;
 
 //Descriptive help function, explaining the basics of how to use everything.  Exits after running
 void PrintHelp(void) {
@@ -174,12 +174,11 @@ int main(int argc, char **argv) {
     
     //Run everything!  With timekeeping
     cout << "Ready to run!" << endl;
-    clock_t mytime;
-    mytime = clock();
+    time_t mytime;
+    mytime = time(NULL);
     system.PrintPlanets();
     RunTheSystem(system, run_time*365.24*24.*3600.,steps_between_prints);
-    mytime = mytime - clock();
-    cout << "All done!  Total time used was " << mytime/CLOCKS_PER_SEC << " s." << endl;
+    cout << "All done!  Total time used was " << time(NULL)-mytime<< " s." << endl;
 
 return(0);
 }
