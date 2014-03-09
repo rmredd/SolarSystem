@@ -216,6 +216,15 @@ void SolarSystem::PrintPlanets(){
         fs << position[0] << " " << position[1] << " " <<position[2] << " " << position[3] << " " << position[4] << " " << position[5] << endl;
         fs.close();
     }
+    //And fill in a separate file with time information
+    if(nSteps > 0) {
+        fs.open(Output_dir+"time.dat",ofstream::app);
+    } else {
+        fs.open(Output_dir+"time.dat");
+    }
+    double mytime;
+    mytime = Planets[0].CurrentTime();
+    fs << nSteps << " " << mytime << " " << mytime/3600./24./365.24 << endl;
 }
 
 //Function that tests for collisions between planets
