@@ -256,16 +256,17 @@ int SolarSystem::CheckForCollision(){
                 p1 = p1 - CoM;
                 p2 = p2 - CoM;
                 //Get the orbital energy
-                E = 0.5*Planets[i].Mass()*(p1[3]*p1[3]+p1[4]*p1[4]+p1[5]*p1[5]) + 0.5*Planets[j].Mass()*(p2[3]*p2[3]+p2[4]*p2[4]+p2[5]*p2[5]);
+                Gmm = G*Planets[i].Mass()*Planets[j].Mass();
+                E = 0.5*Planets[i].Mass()*(p1[3]*p1[3]+p1[4]*p1[4]+p1[5]*p1[5]) + 0.5*Planets[j].Mass()*(p2[3]*p2[3]+p2[4]*p2[4]+p2[5]*p2[5]) - Gmm/separation;
                 //Calculating the angular momentum vector
                 for(int k=0; k<3; k++) L[k] = Planets[i].Mass()*(p1[(1+k)%3]*p1[3+((2+k)%3)] - p1[(2+k)%3]*p1[3+(1+k)%3]) + Planets[j].Mass()*(p2[(1+k)%3]*p2[3+((2+k)%3)] - p2[(2+k)%3]*p2[3+(1+k)%3]);
                 //Now get the amplitude of the vector
-                Lmag2 = sqrt(L[0]*L[0]+L[1]*L[1]+L[2]*L[2]);
+                Lmag2 = L[0]*L[0]+L[1]*L[1]+L[2]*L[2];
                 //Now calculate the separation at closest approach
-                Gmm = G*Planets[i].Mass()*Planets[j].Mass();
                 close_approach = (-Gmm + sqrt(Gmm*Gmm + 2*E*Lmag2*(1/Planets[i].Mass() + 1/Planets[j].Mass())))/(2*E);
                 if(close_approach < sum_radii) {
                     cout << "COLLISION WARNING!  Planets " << Planets[i].MyNameIs() << " and " << Planets[j].MyNameIs() << " are on a collision course at time " << Planets[i].CurrentTime() << endl;
+                    cout << close_approach << " " << sum_radii << " " << E << " " << Lmag2 << endl;
                     return(2);
                 }
             }
