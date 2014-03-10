@@ -534,6 +534,6 @@ void RunTheSystem(SolarSystem &system, long double max_time, int steps_between_p
         nsteps++;
     }
     //print data for the last step if there's a collision
-    if(collided) system.PrintPlanets();
+    if(collided>0) system.PrintPlanets();
 }
 
