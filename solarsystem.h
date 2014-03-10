@@ -155,7 +155,7 @@ public:
     void Initialize(long double, string); //Initialize -- all this does is set the timestep size and outputs
     void AddPlanet(long double, long double, valarray<long double>, long double, string); //Routine for adding a planet -- repeat to fully initialize
     void PrintPlanets(void); //Append the position of the current timestep to files
-    bool CheckForCollision(void); //Test to see if worlds collided
+    int CheckForCollision(void); //Test to see if worlds collided
 
     vector<valarray<long double> > Gravity(int); //Calculates dervative at current time step
     valarray<long double> Gravity(const valarray<long double>, const long double); //Same, but works with Runge Kutta
@@ -229,8 +229,8 @@ void SolarSystem::PrintPlanets(){
 
 //Function that tests for collisions between planets
 //Prints an alert if there is a collision and returns true; returns false otherwise
-bool SolarSystem::CheckForCollision(){
-    long double separation;
+int SolarSystem::CheckForCollision(){
+    long double separation, sum_radii;
     valarray<long double> p1(6), p2(6);
     for(int i=0; i<nPlanets; i++){
         p1 = Planets[i].CurrentPosition(0);
@@ -239,10 +239,35 @@ bool SolarSystem::CheckForCollision(){
             //Calculate the distance between the two planets
             separation = sqrt( (p1[0]-p2[0])*(p1[0]-p2[0]) + (p1[1]-p2[1])*(p1[1]-p2[1]) + (p1[2]-p2[2])*(p1[2]-p2[2]));
             //Is this distance less than the sum of their radii?
-            if (separation < Planets[i].Radius()+Planets[j].Radius()) {
+            sum_radii = Planets[i].Radius() + Planets[j].Radius();
+            if (separation < sum_radii) {
                 //There is a collision!  Print a warning and return true
                 cout << "COLLISION ALERT!  Planets " << Planets[i].MyNameIs() << " and " << Planets[j].MyNameIs() << " collide at time " << Planets[i].CurrentTime() << endl;
                 return(1);
+            }
+            if (separation > sum_radii && separation < 50*sum_radii) {
+                //There is a potential collision here -- let's do a more complex check
+                long double close_approach, E, Lmag2, Gmm;
+                valarray<long double> CoM(6), L(3);
+                //Get the center of mass positon and motion, and subtract it off
+                for(int k=0; k<6; k++) {
+                    CoM[k] = (Planets[i].Mass()*p1[k]+Planets[j].Mass()*p2[k])/(Planets[i].Mass() + Planets[j].Mass());
+                }
+                p1 = p1 - CoM;
+                p2 = p2 - CoM;
+                //Get the orbital energy
+                E = 0.5*Planets[i].Mass()*(p1[3]*p1[3]+p1[4]*p1[4]+p1[5]*p1[5]) + 0.5*Planets[j].Mass()*(p2[3]*p2[3]+p2[4]*p2[4]+p2[5]*p2[5]);
+                //Calculating the angular momentum vector
+                for(int k=0; k<3; k++) L[k] = Planets[i].Mass()*(p1[(1+k)%3]*p1[3+((2+k)%3)] - p1[(2+k)%3]*p1[3+(1+k)%3]) + Planets[j].Mass()*(p2[(1+k)%3]*p2[3+((2+k)%3)] - p2[(2+k)%3]*p2[3+(1+k)%3]);
+                //Now get the amplitude of the vector
+                Lmag2 = sqrt(L[0]*L[0]+L[1]*L[1]+L[2]*L[2]);
+                //Now calculate the separation at closest approach
+                Gmm = G*Planets[i].Mass()*Planets[j].Mass();
+                close_approach = (-Gmm + sqrt(Gmm*Gmm + 2*E*Lmag2*(1/Planets[i].Mass() + 1/Planets[j].Mass())))/(2*E);
+                if(close_approach < sum_radii) {
+                    cout << "COLLISION WARNING!  Planets " << Planets[i].MyNameIs() << " and " << Planets[j].MyNameIs() << " are on a collision course at time " << Planets[i].CurrentTime() << endl;
+                    return(2);
+                }
             }
         }
     }
@@ -499,9 +524,9 @@ void StepTheSystem(SolarSystem &system) {
 //Run the whole shebang for a specified period of time (in seconds)
 //This includes collision checking and the writing of output for each planet's position
 void RunTheSystem(SolarSystem &system, long double max_time, int steps_between_prints) {
-    bool collided = 0;
+    int collided = 0;
     long nsteps=1;
-    while(system.MyTimestep()*system.NumberOfSteps() < max_time && !collided) {
+    while(system.MyTimestep()*system.NumberOfSteps() < max_time && collided==0) {
         StepTheSystem(system);
         //cout << "Running at step: " << system.NumberOfSteps() << endl;
         if(nsteps % steps_between_prints == 0) system.PrintPlanets();
