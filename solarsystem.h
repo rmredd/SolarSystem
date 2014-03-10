@@ -245,7 +245,7 @@ int SolarSystem::CheckForCollision(){
                 cout << "COLLISION ALERT!  Planets " << Planets[i].MyNameIs() << " and " << Planets[j].MyNameIs() << " collide at time " << Planets[i].CurrentTime() << endl;
                 return(1);
             }
-            if (separation > sum_radii && separation < 50*sum_radii) {
+            if (separation > sum_radii && separation < 20*sum_radii) {
                 //There is a potential collision here -- let's do a more complex check
                 long double close_approach, E, Lmag2, Gmm;
                 valarray<long double> CoM(6), L(3);
