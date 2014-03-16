@@ -155,7 +155,7 @@ public:
     void Initialize(long double, string); //Initialize -- all this does is set the timestep size and outputs
     void AddPlanet(long double, long double, valarray<long double>, long double, string); //Routine for adding a planet -- repeat to fully initialize
     void PrintPlanets(void); //Append the position of the current timestep to files
-    int CheckForCollision(void); //Test to see if worlds collided
+    int CheckForCollision(bool); //Test to see if worlds collided
 
     vector<valarray<long double> > Gravity(int); //Calculates dervative at current time step
     valarray<long double> Gravity(const valarray<long double>, const long double); //Same, but works with Runge Kutta
@@ -229,7 +229,7 @@ void SolarSystem::PrintPlanets(){
 
 //Function that tests for collisions between planets
 //Prints an alert if there is a collision and returns true; returns false otherwise
-int SolarSystem::CheckForCollision(){
+int SolarSystem::CheckForCollision(bool halt_for_projected_collision){
     long double separation, sum_radii;
     valarray<long double> p1(6), p2(6);
     for(int i=0; i<nPlanets; i++){
@@ -245,7 +245,7 @@ int SolarSystem::CheckForCollision(){
                 cout << "COLLISION ALERT!  Planets " << Planets[i].MyNameIs() << " and " << Planets[j].MyNameIs() << " collide at time " << Planets[i].CurrentTime() << endl;
                 return(1);
             }
-            if (separation > sum_radii && separation < 20*sum_radii) {
+            if (separation > sum_radii && separation < 20*sum_radii && halt_for_projected_collision) {
                 //There is a potential collision here -- let's do a more complex check
                 long double close_approach, E, Lmag2, Gmm;
                 valarray<long double> CoM(6), L(3);
@@ -524,14 +524,14 @@ void StepTheSystem(SolarSystem &system) {
 
 //Run the whole shebang for a specified period of time (in seconds)
 //This includes collision checking and the writing of output for each planet's position
-void RunTheSystem(SolarSystem &system, long double max_time, int steps_between_prints) {
+void RunTheSystem(SolarSystem &system, long double max_time, int steps_between_prints, bool halt_for_projected_collision) {
     int collided = 0;
     long nsteps=1;
     while(system.MyTimestep()*system.NumberOfSteps() < max_time && collided==0) {
         StepTheSystem(system);
         //cout << "Running at step: " << system.NumberOfSteps() << endl;
         if(nsteps % steps_between_prints == 0) system.PrintPlanets();
-        collided = system.CheckForCollision();
+        collided = system.CheckForCollision(halt_for_projected_collision);
         nsteps++;
     }
     //print data for the last step if there's a collision

@@ -28,6 +28,11 @@ void PrintHelp(void) {
     cout << "          velocities or orbital parameters." << endl;
     cout << "-f : Optional.  Input file format.  0=position/velocity, 1 = orbital parameters."<< endl;
     cout << "     Default is 0" << endl;
+    cout << "--minimalhalt : Normally, if two planets are within 20*(R1+R2), we check to see if" << endl;
+    cout << "                they will collide in the near future, and stop the calculation." << endl;
+    cout << "                Setting this option turns this off.  Calculations will run until" << endl;
+    cout << "                objects actually collide, but some collisions may be missed if the" << endl;
+    cout << "                timestep is large." << endl;
     cout << "--norecenter : Cancels recentering that is normally done." << endl;
     cout << "               Using this option may result in the system having an overall" << endl;
     cout << "               velocity drift." << endl;
@@ -61,6 +66,7 @@ int main(int argc, char **argv) {
     int steps_between_prints = 1;
     string output_directory = "";
     bool do_recenter = 1;
+    bool halt_for_projected_collision=1;
     string filename;
     
     string temp_string;
@@ -97,6 +103,9 @@ int main(int argc, char **argv) {
             } else if(temp_string.find("--norecenter")==0) {
                 //Turning off recentering
                 do_recenter = 0;
+            } else if(temp_string.find("--minimalhalt")==0) {
+                //Setting to run halting only if an actual collision is detected, not for predicted
+                halt_for_projected_collision = 0;
             } else if(temp_string.find("-h")==0 || temp_string.find("--h")==0) {
                 //Catching help requests overrides any run routines -- print help and exit
                 PrintHelp();
@@ -177,7 +186,7 @@ int main(int argc, char **argv) {
     time_t mytime;
     mytime = time(NULL);
     system.PrintPlanets();
-    RunTheSystem(system, run_time*365.24*24.*3600.,steps_between_prints);
+    RunTheSystem(system, run_time*365.24*24.*3600.,steps_between_prints,halt_for_projected_collision);
     cout << "All done!  Total time used was " << time(NULL)-mytime<< " s." << endl;
 
 return(0);
