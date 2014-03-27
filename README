@@ -1,0 +1,31 @@
+This is a brief README file for the SolarSystem software.  For more detailed information, see the documentation file in docs/users_guide.pdf.
+
+###Quick Start Installation###
+
+Mac/Linux:
+
+In this directory, type:
+
+make
+
+
+
+Windows:
+
+I still need to make an NMAKE file for windows and test.  Write your own at your own risk.
+
+###Usage###
+
+For basic usage, type:
+
+./SolarSystem --help
+
+General usage requires an input file.  Two example input files are given in the data directory.  Lines in the parameter file may be commented out using "#".
+
+A typical run may look like:
+
+./SolarSystem data/solarsystem.dat -r 10
+
+Which will run an integration for the Solar System for ten years.  Output files will be named things like TheEarth.dat and will contain x, y, z, vx, vy, vz information in the columns.  A separate file, time.dat, contains a listing of the time at each step since the run began.
+
+For more detailsl, read the user's guide.
