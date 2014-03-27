@@ -8,7 +8,7 @@ In this directory, type:
 
 make
 
-
+This should run without any warnings, and produce the executable SolarSystem.
 
 Windows:
 

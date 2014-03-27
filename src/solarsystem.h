@@ -129,7 +129,7 @@ valarray<long double> Planet::Gravity(const valarray<long double> x_else, const 
 	valarray<long double> DX(6);
 	
 	const long double x = x_else[0]-X[0]; const long double y = x_else[1]-X[1]; const long double z = x_else[2]-X[2];
-	const long double vx = x_else[3]; const long double vy = x_else[4]; const long double vz = x_else[5];
+	//const long double vx = x_else[3]; const long double vy = x_else[4]; const long double vz = x_else[5];
 	
 	//position derivative is velocity, which is not given by this object
 	DX[0] = 0.; DX[1] = 0.; DX[2] = 0.;
