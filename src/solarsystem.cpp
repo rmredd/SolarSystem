@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
     FILE * testFile;
     char * output_dir_char = (char *) output_directory.c_str();
     testFile = fopen(output_dir_char, "r");
-    if(testFile==NULL) {
+    if( (testFile==NULL) && (output_directory!="")) {
         cout << "WARNING: Requested output directory does not exist.  Defaulting to current" << endl;
         cout << "         working directory." << endl;
         output_directory = "";
