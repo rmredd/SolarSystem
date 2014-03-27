@@ -17,7 +17,9 @@ Thus, I gave up and decided I would write the thing I wanted.
 
 It's not done yet.  I ultimately plan to write up a nifty GUI for all of this, to make it easier and more intuitive to use.  And perhaps I'll put it up as a web application, if I'm feeling ambitious.
 
-At present, it is less user-friendly than my ultimate goal.  It is currently a small N-body solver which runs on the command line, and spits out as much information as you want.  
+At present, it is less user-friendly than my ultimate goal.  It is currently a small N-body solver which runs on the command line, and spits out as much information as you want.
+
+You should also be aware that this is NOT a science-grade program.  It is intended as a learning tool and (perhaps) for getting a realistic sense of timescales, chaos, and solar system dynamics for general knowledge and science-fiction writing.
 
 \section{Installation}
 
@@ -83,6 +85,8 @@ Sol 1.988544e30 6.955e8 1.8e8 -3.4e8 -1.39e7 0 0 0
 
 Each line should look like this.  The first entry should be a name for the object, with no spaces.  ("TheEarth" is fine, but "The Earth" is not.)  The name you choose will be the preface of the   The second entry should be the object's mass, in kilograms.  (Yes, the Sun is that massive.)  The second entry should be the object's radius in meters.  The next three entries should be the x, y and z coordinates of the object at the initial time, also in meters.  The remaining three inputs are the velocity of the object in each of the x, y, z directions, in meters per second.
 
+The parameter file doesn't distinguish between stars, planets, dwarf planets, giant space wedgies, or whatever.  So, if you're making your own solar system, don't forget to drop a star in there.
+
 If you decide you don't want to include an object any more, just put the comment character ``\#'' in front of the line, and it will be ignored.
 
 You can set the radius for an object to zero.  In that case, it's treating as an infinitesimally small particle with finite mass, and will not collide with other objects that also have a radius of zero.
@@ -109,7 +113,7 @@ Speaking of which, even in our solar system, the planets will tug on the star, g
 
 Finally, do note that over long times (if you run for hundreds of years, say), small differences can add up.  A difference in position of less than a meter can determine whether an asteroid hits the Earth or not in a few millennia.  If you make a chaotic system, like the one in my Jackpot system, try fiddling a little bit with the parameters to see how it changes the results.
 
-If you want to make a binary star system, that's a bit more complicated, but Wikipedia is a pretty good resource for getting a handle on how to set that up.  Do the binary stars first, and make sure your two stars orbit each other in a stable fashion before you start throwing planets in there.
+If you want to make a binary star system, that's a bit more complicated, but Wikipedia is a pretty good resource to start from.  Do the binary stars first, and make sure your two stars orbit each other in a stable fashion before you start throwing planets in there.
 
 \section{Specifications and Performance}\label{sec:details}
 
